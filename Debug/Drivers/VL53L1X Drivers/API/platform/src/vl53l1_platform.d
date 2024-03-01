@@ -1,19 +1,6 @@
 Drivers/VL53L1X Drivers/API/platform/src/vl53l1_platform.o: \
  ../Drivers/VL53L1X\ Drivers/API/platform/src/vl53l1_platform.c \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_ll_def.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_ll_device.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_types.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_user_config.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_error_codes.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_register_structs.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_register_map.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_user_defines.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_error_exceptions.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_log.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_ipp_imports.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_user_data.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h \
+ ../Core/Inc/main.h ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h \
  ../Core/Inc/stm32g0xx_hal_conf.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_def.h \
@@ -42,29 +29,13 @@ Drivers/VL53L1X Drivers/API/platform/src/vl53l1_platform.o: \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_i2c_ex.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_pwr.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_pwr_ex.h \
+ ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim.h \
+ ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_def.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_ll_def.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_log.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_api.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_api_strings.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_def.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_api_core.h \
- E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_preset_setup.h
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_ll_def.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_ll_device.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_types.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_user_config.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_error_codes.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_register_structs.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_register_map.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_user_defines.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_error_exceptions.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_log.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_ipp_imports.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_user_data.h:
+ E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform.h \
+ E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_types.h
+../Core/Inc/main.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal.h:
 ../Core/Inc/stm32g0xx_hal_conf.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_rcc.h:
@@ -94,13 +65,9 @@ E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_i2c_ex.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_pwr.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_pwr_ex.h:
+../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim.h:
+../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_def.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_ll_def.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform_log.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_api.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_api_strings.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_def.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_api_core.h:
-E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/core/inc/vl53l1_preset_setup.h:
+E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_platform.h:
+E:/Projects/Electronics/Personal\ Projects/Overhead\ Tank/STM32\ Practise/Sensor\ Reading/Drivers/VL53L1X\ Drivers/API/platform/inc/vl53l1_types.h:

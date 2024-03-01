@@ -54,6 +54,12 @@ default.size.stdout \
 OBJDUMP_LIST += \
 Sensor\ Reading.list \
 
+OBJCOPY_HEX += \
+Sensor\ Reading.hex \
+
+OBJCOPY_BIN += \
+Sensor\ Reading.bin \
+
 
 # All Target
 all: main-build
@@ -77,12 +83,22 @@ Sensor\ Reading.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
+Sensor\ Reading.hex: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O ihex $(EXECUTABLES) "Sensor Reading.hex"
+	@echo 'Finished building: $@'
+	@echo ' '
+
+Sensor\ Reading.bin: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objcopy  -O binary $(EXECUTABLES) "Sensor Reading.bin"
+	@echo 'Finished building: $@'
+	@echo ' '
+
 # Other Targets
 clean:
-	-$(RM) Sensor\ Reading.elf Sensor\ Reading.list Sensor\ Reading.map Sensor\\ Reading.elf default.size.stdout
+	-$(RM) Sensor\ Reading.bin Sensor\ Reading.elf Sensor\ Reading.hex Sensor\ Reading.list Sensor\ Reading.map Sensor\\ Reading.elf default.size.stdout
 	-@echo ' '
 
-secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)
+secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST) $(OBJCOPY_HEX) $(OBJCOPY_BIN)
 
 fail-specified-linker-script-missing:
 	@echo 'Error: Cannot find the specified linker script. Check the linker settings in the build configuration.'

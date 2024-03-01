@@ -49,6 +49,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -57,13 +59,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define VL53L1X_INT_Pin GPIO_PIN_4
-#define VL53L1X_INT_GPIO_Port GPIOA
-#define VL53L1X_INT_EXTI_IRQn EXTI4_15_IRQn
-#define RLY_Pin GPIO_PIN_3
-#define RLY_GPIO_Port GPIOB
-#define BUZZ_Pin GPIO_PIN_4
-#define BUZZ_GPIO_Port GPIOB
+#define B_INPUT_Pin GPIO_PIN_0
+#define B_INPUT_GPIO_Port GPIOA
+#define A_INPUT_Pin GPIO_PIN_1
+#define A_INPUT_GPIO_Port GPIOA
+#define TRIGGER_INPUT_Pin GPIO_PIN_10
+#define TRIGGER_INPUT_GPIO_Port GPIOA
+#define MTR_RELAY_Pin GPIO_PIN_3
+#define MTR_RELAY_GPIO_Port GPIOB
+#define MTR_LED_STATS_Pin GPIO_PIN_4
+#define MTR_LED_STATS_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

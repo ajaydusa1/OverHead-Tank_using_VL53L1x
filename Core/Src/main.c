@@ -21,22 +21,37 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "vl53l1_api.h"
-#include "vl53l1_platform.h"
-#include "vl53l1_api_calibration.h"
+#include "stm32g0xx_hal.h"
+
+#include "VL53L1X_API.h"
+#include "VL53l1X_calibration.h"
+
+#include "FIRFilter.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+//#include <string.h>
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-char buff[40];
+char buff[15];
+uint16_t dev = 0x52;
+int status;
+uint8_t byteData, sensorState=0;
+uint16_t wordData;
+uint16_t Distance;
+uint8_t dataReady;
+
+
+uint8_t a,b,newTrigState;		// These variables stores Manual/auto Status value
+uint8_t Threshold_min,Threshold_max;
+uint8_t prevTrigBtnState=1;
+uint8_t MotorState;
+
+FIRFilter sensor_Read;
 
 /* USER CODE END PD */
 
@@ -48,14 +63,15 @@ char buff[40];
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c2;
 
+TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim17;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 /* USER CODE BEGIN PV */
-VL53L1_Dev_t                   dev;
-VL53L1_DEV                     Dev = &dev;
-int status;
-volatile int IntCount;
+
+
 
 /* USER CODE END PV */
 
@@ -64,6 +80,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM17_Init(void);
+static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -71,7 +89,7 @@ static void MX_USART2_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void AutonomousLowPowerRangingTest(void); /* see Autonomous ranging example implementation in USER CODE BEGIN 4 section */
-
+void ModeSelect();
 /* USER CODE END 0 */
 
 /**
@@ -81,9 +99,8 @@ void AutonomousLowPowerRangingTest(void); /* see Autonomous ranging example impl
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-	  uint8_t byteData;
-	  uint16_t wordData;
-	  uint8_t ToFSensor = 1; // 0=Left, 1=Center(default), 2=Right
+
+
 
   /* USER CODE END 1 */
 
@@ -107,36 +124,29 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C2_Init();
   MX_USART2_UART_Init();
+  MX_TIM17_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-  Dev->I2cHandle = &hi2c2;
-  Dev->I2cDevAddr = 0x52;
 
-  VL53L1_RdByte(Dev, 0x010F, &byteData);
-  printf("VL53L1X Model_ID: %02X\n\r", byteData);
-  VL53L1_RdByte(Dev, 0x0110, &byteData);
-  printf("VL53L1X Module_Type: %02X\n\r", byteData);
-  VL53L1_RdWord(Dev, 0x010F, &wordData);
-  printf("VL53L1X: %02X\n\r", wordData);
-
-  AutonomousLowPowerRangingTest();
+  HAL_TIM_Base_Start_IT(&htim17);					// Starting Timer Interrupt for Sensor Readings
 
 
-	/*********************************/
-/*     Sensor configuration      */
-/*********************************/
+  //AutonomousLowPowerRangingTest();
 
-/* (Optional) Program sensor to raise an interrupt ONLY below 300mm */
-//status = VL53L1X_SetDistanceMode(dev, 2);
-//	status = VL53L1X_SetInterruptPolarity(dev, 0);
-//status = VL53L1X_SetTimingBudgetInMs(dev, 100); /* in ms possible values [20, 50, 100, 200, 500] */
-//status = VL53L1X_SetInterMeasurementInMs(dev, 100); /* in ms, IM must be > = TB */
-//status = VL53L1X_SetDistanceThreshold(dev,100,300,0,1);
+  status = VL53L1_RdByte(dev, 0x010F, &byteData);
+  status = VL53L1_RdByte(dev, 0x0110, &byteData);
+  status = VL53L1_RdWord(dev, 0x010F, &wordData);
 
-//	status = VL53L1X_StartRanging(dev);   /* This function has to be called to enable the ranging */
+  while(sensorState==0){
 
-//printf("Ranging started. Put your hand close to the sensor to generate an interrupt...\n");
+	 status = VL53L1X_BootState(dev, &sensorState);
+	 HAL_Delay(2);
 
+  }
+
+  status = VL53L1X_SensorInit(dev);
+  status = VL53L1X_StartRanging(dev);   /* This function has to be called to enable the ranging */
 
 
   /* USER CODE END 2 */
@@ -145,10 +155,16 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+	 __HAL_TIM_SET_COMPARE(&htim3,TIM_CHANNEL_1,500);  //PWM frequency set to 2Hz. 1000 value means 50% of ARR.
+
+	 ModeSelect();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  AutonomousLowPowerRangingTest();
+
+   AutonomousLowPowerRangingTest();
 
   }
   /* USER CODE END 3 */
@@ -243,6 +259,97 @@ static void MX_I2C2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 4000-1;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 1000-1;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
+  * @brief TIM17 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM17_Init(void)
+{
+
+  /* USER CODE BEGIN TIM17_Init 0 */
+
+  /* USER CODE END TIM17_Init 0 */
+
+  /* USER CODE BEGIN TIM17_Init 1 */
+
+  /* USER CODE END TIM17_Init 1 */
+  htim17.Instance = TIM17;
+  htim17.Init.Prescaler = 8000-1;
+  htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim17.Init.Period = 60000-1;
+  htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim17.Init.RepetitionCounter = 0;
+  htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim17) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM17_Init 2 */
+
+  /* USER CODE END TIM17_Init 2 */
+
+}
+
+/**
   * @brief USART2 Initialization Function
   * @param None
   * @retval None
@@ -295,24 +402,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, RLY_Pin|BUZZ_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(MTR_RELAY_GPIO_Port, MTR_RELAY_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : VL53L1X_INT_Pin */
-  GPIO_InitStruct.Pin = VL53L1X_INT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  /*Configure GPIO pins : B_INPUT_Pin A_INPUT_Pin TRIGGER_INPUT_Pin */
+  GPIO_InitStruct.Pin = B_INPUT_Pin|A_INPUT_Pin|TRIGGER_INPUT_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(VL53L1X_INT_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RLY_Pin BUZZ_Pin */
-  GPIO_InitStruct.Pin = RLY_Pin|BUZZ_Pin;
+  /*Configure GPIO pin : MTR_RELAY_Pin */
+  GPIO_InitStruct.Pin = MTR_RELAY_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+  HAL_GPIO_Init(MTR_RELAY_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -322,45 +425,88 @@ static void MX_GPIO_Init(void)
 
 void AutonomousLowPowerRangingTest(void)
 	{
-		static VL53L1_RangingMeasurementData_t RangingData;
-		    status = VL53L1_WaitDeviceBooted(Dev);
-			status = VL53L1_DataInit(Dev);
-			status = VL53L1_StaticInit(Dev);
-			status = VL53L1_SetDistanceMode(Dev, VL53L1_DISTANCEMODE_LONG);
-			status = VL53L1_SetMeasurementTimingBudgetMicroSeconds(Dev, 50000);
-			status = VL53L1_SetInterMeasurementPeriodMilliSeconds(Dev, 500);
-			status = VL53L1_StartMeasurement(Dev);
 
-	  do // polling mode
-		{
-		  status = VL53L1_WaitMeasurementDataReady(Dev);
-			if(!status)
-			{
-				status = VL53L1_GetRangingMeasurementData(Dev, &RangingData);
-				if(status==0){
+	  while (dataReady == 0){
 
-						if(status==0){
+		  status = VL53L1X_CheckForDataReady(dev, &dataReady);
+		  HAL_Delay(2);
 
-							sprintf(buff, "%d, %d  \n\r", RangingData.RangeStatus, RangingData.RangeMilliMeter);
-	            HAL_UART_Transmit(&huart2, (uint8_t*)buff, strlen(buff), 0xFFFF);
+	  }
+	  dataReady = 0;
 
-							/*sprintf(buff,"VL53L1X n address is %d	\r\n",RangingData);
-						HAL_UART_Transmit(&huart2,(uint8_t*)buff,sizeof(buff),200);
-						HAL_Delay(100);*/
+	  status = VL53L1X_GetDistance(dev, &Distance);
+	  status = VL53L1X_ClearInterrupt(dev); /* clear interrupt has to be called to enable next interrupt*/
 
-				}
-
-
-
-				}
-				status = VL53L1_ClearInterruptAndStartMeasurement(Dev);
-			}
-		}
-		while (1);
-
-
+	  sprintf(buff,"%d \n\r",Distance);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)buff, sizeof(buff), 200);
+	  HAL_Delay(500);
 
 	}
+
+
+void ModeSelect()
+{
+		a = HAL_GPIO_ReadPin(GPIOA, A_INPUT_Pin);		// Reads Input for Auto/Manual
+		b = HAL_GPIO_ReadPin(GPIOA, B_INPUT_Pin);		// Reads Input for Auto/Manual
+
+		newTrigState = HAL_GPIO_ReadPin(GPIOA, TRIGGER_INPUT_Pin);		// Reads Input from the Trigger Pin
+
+
+
+		if((a==0) && (b==1)){						// The switch is in Manual Mode
+
+			if(newTrigState==0 && prevTrigBtnState==1){    //If the state has changed, increment the counter
+
+			    	if(MotorState == 0){        //If the current state is LOW, then the button went from off to on
+
+			    		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);			//  Motor_On Blinky Status
+			    		HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
+			    		MotorState=1;
+
+				    	}else{
+
+				    	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+				    	HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+				    	MotorState=0;
+				    	}
+			    	HAL_Delay(20);
+
+				    }
+			prevTrigBtnState = newTrigState;
+
+
+
+		   }else if((a==1) && (b==0)){						// The switch is in Auto Mode
+
+					if((newTrigState == 1) && ((sensor_Read.out) <= Threshold_max)){
+
+						HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+						HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
+
+					}else{
+
+						HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+					    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+					}
+
+		   }else {						// The switch is in Off/Center Mode
+
+						HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+		         }
+
+}
+
+void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
+
+{
+
+  if(htim == &htim17){
+
+ //  AutonomousLowPowerRangingTest();				//This function or API triggers after every 30s. Update Event handler.
+  }
+
+}
+
 
 /* USER CODE END 4 */
 
