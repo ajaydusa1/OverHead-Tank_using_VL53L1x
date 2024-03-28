@@ -18,21 +18,19 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32g0xx_hal.h"
 
 #include "VL53L1X_API.h"
 #include "VL53l1X_calibration.h"
-
 #include "FIRFilter.h"
 
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-//#include <string.h>
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -45,9 +43,14 @@ uint16_t wordData;
 uint16_t Distance;
 uint8_t dataReady;
 
+int ledLevel;
+uint32_t fbits = 0;
+int thisled = 0;
+
 
 uint8_t a,b,newTrigState;		// These variables stores Manual/auto Status value
-uint8_t Threshold_min,Threshold_max;
+uint8_t float_sensor;
+int Threshold_min = 2000,Threshold_max = 20;
 uint8_t prevTrigBtnState=1;
 uint8_t MotorState;
 
@@ -84,12 +87,15 @@ static void MX_TIM17_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 void AutonomousLowPowerRangingTest(void); /* see Autonomous ranging example implementation in USER CODE BEGIN 4 section */
-void ModeSelect();
+void ModeSelect(void);
+void led_bar(void);
+uint32_t map(uint32_t x, uint32_t in_min, uint32_t in_max, uint32_t out_min, uint32_t out_max);
 /* USER CODE END 0 */
 
 /**
@@ -128,25 +134,21 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
-
-  HAL_TIM_Base_Start_IT(&htim17);					// Starting Timer Interrupt for Sensor Readings
-
-
-  //AutonomousLowPowerRangingTest();
-
   status = VL53L1_RdByte(dev, 0x010F, &byteData);
   status = VL53L1_RdByte(dev, 0x0110, &byteData);
   status = VL53L1_RdWord(dev, 0x010F, &wordData);
 
-  while(sensorState==0){
 
-	 status = VL53L1X_BootState(dev, &sensorState);
-	 HAL_Delay(2);
+	/* while(sensorState==0){
 
-  }
+		 status = VL53L1X_BootState(dev, &sensorState);
+		 HAL_Delay(2);
+	  }
 
-  status = VL53L1X_SensorInit(dev);
-  status = VL53L1X_StartRanging(dev);   /* This function has to be called to enable the ranging */
+	  status = VL53L1X_SensorInit(dev);
+	  status = VL53L1X_StartRanging(dev);   // This function has to be called to enable the ranging
+*/
+    //  HAL_TIM_Base_Start_IT(&htim17);					// Starting Timer Interrupt for Sensor Readings
 
 
   /* USER CODE END 2 */
@@ -156,15 +158,16 @@ int main(void)
   while (1)
   {
 
-	 __HAL_TIM_SET_COMPARE(&htim3,TIM_CHANNEL_1,500);  //PWM frequency set to 2Hz. 1000 value means 50% of ARR.
+	 __HAL_TIM_SET_COMPARE(&htim3,TIM_CHANNEL_1,500);  //PWM frequency set to 2Hz. 1000 value means 50% of ARR. This Timer will blink the LED Motor ON twice per sec
 
 	 ModeSelect();
+	 //led_bar();
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-   AutonomousLowPowerRangingTest();
+  // AutonomousLowPowerRangingTest();			//This function is being used in the Timer section check below
 
   }
   /* USER CODE END 3 */
@@ -190,7 +193,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 8;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -200,11 +209,11 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -226,7 +235,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x00303D5B;
+  hi2c2.Init.Timing = 0x10707DBC;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -335,7 +344,7 @@ static void MX_TIM17_Init(void)
   htim17.Instance = TIM17;
   htim17.Init.Prescaler = 8000-1;
   htim17.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim17.Init.Period = 60000-1;
+  htim17.Init.Period = 10000-1;
   htim17.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim17.Init.RepetitionCounter = 0;
   htim17.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -402,7 +411,12 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(MTR_RELAY_GPIO_Port, MTR_RELAY_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, led_1_Pin|led_2_Pin|led_3_Pin|led_4_Pin
+                          |led_6_Pin|led_8_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, led_5_Pin|led_7_Pin|MTR_RELAY_Pin|led_10_Pin
+                          |led_9_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : B_INPUT_Pin A_INPUT_Pin TRIGGER_INPUT_Pin */
   GPIO_InitStruct.Pin = B_INPUT_Pin|A_INPUT_Pin|TRIGGER_INPUT_Pin;
@@ -410,12 +424,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : MTR_RELAY_Pin */
-  GPIO_InitStruct.Pin = MTR_RELAY_Pin;
+  /*Configure GPIO pins : led_1_Pin led_2_Pin led_3_Pin led_4_Pin
+                           led_6_Pin led_8_Pin */
+  GPIO_InitStruct.Pin = led_1_Pin|led_2_Pin|led_3_Pin|led_4_Pin
+                          |led_6_Pin|led_8_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(MTR_RELAY_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : led_5_Pin led_7_Pin MTR_RELAY_Pin led_10_Pin
+                           led_9_Pin */
+  GPIO_InitStruct.Pin = led_5_Pin|led_7_Pin|MTR_RELAY_Pin|led_10_Pin
+                          |led_9_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : FLT_SENSE_Pin */
+  GPIO_InitStruct.Pin = FLT_SENSE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(FLT_SENSE_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -423,13 +454,11 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void AutonomousLowPowerRangingTest(void)
-	{
+void AutonomousLowPowerRangingTest(void){
 
 	  while (dataReady == 0){
 
 		  status = VL53L1X_CheckForDataReady(dev, &dataReady);
-		  HAL_Delay(2);
 
 	  }
 	  dataReady = 0;
@@ -437,11 +466,37 @@ void AutonomousLowPowerRangingTest(void)
 	  status = VL53L1X_GetDistance(dev, &Distance);
 	  status = VL53L1X_ClearInterrupt(dev); /* clear interrupt has to be called to enable next interrupt*/
 
-	  sprintf(buff,"%d \n\r",Distance);
+	   FIRFilter_Update(&sensor_Read, Distance);
+	  sprintf(buff, "%.1f \n\r", sensor_Read.out);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)buff, sizeof(buff), 200);
-	  HAL_Delay(500);
 
-	}
+}
+
+
+void led_bar()
+{
+
+	memcpy(&fbits, &sensor_Read.out, sizeof(fbits));
+
+	ledLevel = map(fbits, 400, 150, 0, 10);
+
+
+	  // loop over the LED array:
+	  for (thisled = 0; thisled < 10; thisled++) {
+	    // if the array element's index is less than ledLevel,
+	    // turn the pin for this element on:
+	    if (thisled < ledLevel) {
+
+	    }
+	    // turn off all pins higher than the ledLevel:
+	    else {
+
+
+
+	    }
+	  }
+
+}
 
 
 void ModeSelect()
@@ -451,13 +506,21 @@ void ModeSelect()
 
 		newTrigState = HAL_GPIO_ReadPin(GPIOA, TRIGGER_INPUT_Pin);		// Reads Input from the Trigger Pin
 
+		float_sensor = HAL_GPIO_ReadPin(GPIOB, FLT_SENSE_Pin);		//Reads Input from the Float Sensor
 
 
-		if((a==0) && (b==1)){						// The switch is in Manual Mode
+		//sprintf(buff, "%d,%d,%d, %d \n\r",a,b,newTrigState,float_sensor);
+
+		//sprintf(buff, "%d \n\r",float_sensor);
+		//HAL_UART_Transmit(&huart2, (uint8_t*)buff, sizeof(buff), 200);
+       // HAL_Delay(200);
+
+
+		if((a==0) && (b==1)){						// The switch is in Manual Mode. When switch symbol is - then we are in manual mode, when switch symbol is = then we are in auto-mode
 
 			if(newTrigState==0 && prevTrigBtnState==1){    //If the state has changed, increment the counter
 
-			    	if(MotorState == 0){        //If the current state is LOW, then the button went from off to on
+			    	if(MotorState == 0){        //If the current state of Motor is LOW, then the button went from off to on
 
 			    		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);			//  Motor_On Blinky Status
 			    		HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
@@ -469,30 +532,42 @@ void ModeSelect()
 				    	HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
 				    	MotorState=0;
 				    	}
-			    	HAL_Delay(20);
+			    	HAL_Delay(10);
 
 				    }
 			prevTrigBtnState = newTrigState;
 
 
 
-		   }else if((a==1) && (b==0)){						// The switch is in Auto Mode
+		   } else if((a==1) && (b==0)){						// The switch is in Auto Mode. ie the switch position is at =
 
-					if((newTrigState == 1) && ((sensor_Read.out) <= Threshold_max)){
+			   newTrigState = HAL_GPIO_ReadPin(GPIOA, TRIGGER_INPUT_Pin);
 
-						HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-						HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
+					if(newTrigState == 0){
 
-					}else{
+					//	if (MotorState == 0 && ((Distance >= Threshold_min) || (Distance <= Threshold_min)  || float_sensor!=0)){					//Water is less than Threshold level, then turn ON the Motor
+						if (MotorState == 0 && float_sensor!=0){					//Water is less than Threshold level, then turn ON the Motor
+							HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+							HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
+							MotorState = 1;
+						}
+
+					//} else if(MotorState == 1 && ((Distance <= Threshold_max) || float_sensor==0)){		//Water has reached the Threshold Level, turn OFF the Motor
+					  } else if(MotorState == 1 && float_sensor==0){		//Water has reached the Threshold Level, turn OFF the Motor
 
 						HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
 					    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
-					}
+					    MotorState =0;
+					  }	else if((MotorState == 0 && newTrigState == 1) || float_sensor==0){				//Water has reached the Threshold Level, turn OFF the Motor
 
-		   }else {						// The switch is in Off/Center Mode
+						HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+					    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+					  }
 
+		   } else  {						// The switch is in Off/Center Mode
+			   	   	    HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
 						HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
-		         }
+		           }
 
 }
 
@@ -502,10 +577,17 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 
   if(htim == &htim17){
 
- //  AutonomousLowPowerRangingTest();				//This function or API triggers after every 30s. Update Event handler.
+     AutonomousLowPowerRangingTest();				//This function or API triggers after every 30s. Update Event handler.
+
   }
 
 }
+
+
+uint32_t  map(uint32_t  x, uint32_t  in_min, uint32_t  in_max, uint32_t  out_min, uint32_t  out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 
 
 /* USER CODE END 4 */

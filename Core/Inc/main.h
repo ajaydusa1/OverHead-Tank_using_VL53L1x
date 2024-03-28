@@ -63,12 +63,34 @@ void Error_Handler(void);
 #define B_INPUT_GPIO_Port GPIOA
 #define A_INPUT_Pin GPIO_PIN_1
 #define A_INPUT_GPIO_Port GPIOA
+#define led_1_Pin GPIO_PIN_4
+#define led_1_GPIO_Port GPIOA
+#define led_2_Pin GPIO_PIN_5
+#define led_2_GPIO_Port GPIOA
+#define led_3_Pin GPIO_PIN_6
+#define led_3_GPIO_Port GPIOA
+#define led_4_Pin GPIO_PIN_7
+#define led_4_GPIO_Port GPIOA
+#define led_5_Pin GPIO_PIN_0
+#define led_5_GPIO_Port GPIOB
+#define led_7_Pin GPIO_PIN_1
+#define led_7_GPIO_Port GPIOB
+#define led_6_Pin GPIO_PIN_9
+#define led_6_GPIO_Port GPIOA
 #define TRIGGER_INPUT_Pin GPIO_PIN_10
 #define TRIGGER_INPUT_GPIO_Port GPIOA
+#define led_8_Pin GPIO_PIN_15
+#define led_8_GPIO_Port GPIOA
 #define MTR_RELAY_Pin GPIO_PIN_3
 #define MTR_RELAY_GPIO_Port GPIOB
 #define MTR_LED_STATS_Pin GPIO_PIN_4
 #define MTR_LED_STATS_GPIO_Port GPIOB
+#define led_10_Pin GPIO_PIN_6
+#define led_10_GPIO_Port GPIOB
+#define led_9_Pin GPIO_PIN_7
+#define led_9_GPIO_Port GPIOB
+#define FLT_SENSE_Pin GPIO_PIN_8
+#define FLT_SENSE_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
