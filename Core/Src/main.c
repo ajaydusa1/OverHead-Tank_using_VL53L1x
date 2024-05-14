@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32g0xx_hal.h"
@@ -43,10 +44,11 @@ uint16_t wordData;
 uint16_t Distance;
 uint8_t dataReady;
 
-int ledLevel;
-uint32_t fbits = 0;
+uint16_t ledLevel;
+uint16_t fbits = 0;
 int thisled = 0;
 
+uint16_t led[10]={0x0010,0x0020,0x0040,0x0080,0x0001,0x0200,0x0002,0x8000,0x0100,0x0400};
 
 uint8_t a,b,newTrigState;		// These variables stores Manual/auto Status value
 uint8_t float_sensor;
@@ -134,12 +136,13 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
 
+  /*
   status = VL53L1_RdByte(dev, 0x010F, &byteData);
   status = VL53L1_RdByte(dev, 0x0110, &byteData);
   status = VL53L1_RdWord(dev, 0x010F, &wordData);
 
 
-	/* while(sensorState==0){
+	 while(sensorState==0){
 
 		 status = VL53L1X_BootState(dev, &sensorState);
 		 HAL_Delay(2);
@@ -147,9 +150,9 @@ int main(void)
 
 	  status = VL53L1X_SensorInit(dev);
 	  status = VL53L1X_StartRanging(dev);   // This function has to be called to enable the ranging
-*/
-    //  HAL_TIM_Base_Start_IT(&htim17);					// Starting Timer Interrupt for Sensor Readings
 
+      HAL_TIM_Base_Start_IT(&htim17);					// Starting Timer Interrupt for Sensor Readings
+*/
 
   /* USER CODE END 2 */
 
@@ -161,13 +164,13 @@ int main(void)
 	 __HAL_TIM_SET_COMPARE(&htim3,TIM_CHANNEL_1,500);  //PWM frequency set to 2Hz. 1000 value means 50% of ARR. This Timer will blink the LED Motor ON twice per sec
 
 	 ModeSelect();
-	 //led_bar();
+
+	 led_bar();
 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
-  // AutonomousLowPowerRangingTest();			//This function is being used in the Timer section check below
 
   }
   /* USER CODE END 3 */
@@ -411,42 +414,36 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, led_1_Pin|led_2_Pin|led_3_Pin|led_4_Pin
-                          |led_6_Pin|led_8_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, led_5_Pin|led_7_Pin|led_1_Pin|led_2_Pin
+                          |led_3_Pin|led_4_Pin|led_9_Pin|led_6_Pin
+                          |led_10_Pin|led_8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, led_5_Pin|led_7_Pin|MTR_RELAY_Pin|led_10_Pin
-                          |led_9_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, ALARM_Pin|MTR_RELAY_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : B_INPUT_Pin A_INPUT_Pin TRIGGER_INPUT_Pin */
-  GPIO_InitStruct.Pin = B_INPUT_Pin|A_INPUT_Pin|TRIGGER_INPUT_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : led_1_Pin led_2_Pin led_3_Pin led_4_Pin
-                           led_6_Pin led_8_Pin */
-  GPIO_InitStruct.Pin = led_1_Pin|led_2_Pin|led_3_Pin|led_4_Pin
-                          |led_6_Pin|led_8_Pin;
+  /*Configure GPIO pins : led_5_Pin led_7_Pin led_1_Pin led_2_Pin
+                           led_3_Pin led_4_Pin led_9_Pin led_6_Pin
+                           led_10_Pin led_8_Pin */
+  GPIO_InitStruct.Pin = led_5_Pin|led_7_Pin|led_1_Pin|led_2_Pin
+                          |led_3_Pin|led_4_Pin|led_9_Pin|led_6_Pin
+                          |led_10_Pin|led_8_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : led_5_Pin led_7_Pin MTR_RELAY_Pin led_10_Pin
-                           led_9_Pin */
-  GPIO_InitStruct.Pin = led_5_Pin|led_7_Pin|MTR_RELAY_Pin|led_10_Pin
-                          |led_9_Pin;
+  /*Configure GPIO pins : TRIGGER_INPUT_Pin B_INPUT_Pin A_INPUT_Pin FLT_SENSE_Pin */
+  GPIO_InitStruct.Pin = TRIGGER_INPUT_Pin|B_INPUT_Pin|A_INPUT_Pin|FLT_SENSE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : ALARM_Pin MTR_RELAY_Pin */
+  GPIO_InitStruct.Pin = ALARM_Pin|MTR_RELAY_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : FLT_SENSE_Pin */
-  GPIO_InitStruct.Pin = FLT_SENSE_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(FLT_SENSE_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -468,7 +465,7 @@ void AutonomousLowPowerRangingTest(void){
 
 	   FIRFilter_Update(&sensor_Read, Distance);
 	  sprintf(buff, "%.1f \n\r", sensor_Read.out);
-	  HAL_UART_Transmit(&huart2, (uint8_t*)buff, sizeof(buff), 200);
+	 HAL_UART_Transmit(&huart2, (uint8_t*)buff, sizeof(buff), 200);
 
 }
 
@@ -476,9 +473,8 @@ void AutonomousLowPowerRangingTest(void){
 void led_bar()
 {
 
-	memcpy(&fbits, &sensor_Read.out, sizeof(fbits));
 
-	ledLevel = map(fbits, 400, 150, 0, 10);
+	ledLevel = map(Distance, 55, 335, 0, 10);
 
 
 	  // loop over the LED array:
@@ -487,13 +483,16 @@ void led_bar()
 	    // turn the pin for this element on:
 	    if (thisled < ledLevel) {
 
+	    	HAL_GPIO_WritePin(GPIOA,(uint16_t)led[thisled], GPIO_PIN_RESET);
+
 	    }
 	    // turn off all pins higher than the ledLevel:
 	    else {
 
-
+	    	HAL_GPIO_WritePin(GPIOA,(uint16_t)led[thisled], GPIO_PIN_SET);
 
 	    }
+
 	  }
 
 }
@@ -501,12 +500,13 @@ void led_bar()
 
 void ModeSelect()
 {
-		a = HAL_GPIO_ReadPin(GPIOA, A_INPUT_Pin);		// Reads Input for Auto/Manual
-		b = HAL_GPIO_ReadPin(GPIOA, B_INPUT_Pin);		// Reads Input for Auto/Manual
+		a = HAL_GPIO_ReadPin(GPIOB, A_INPUT_Pin);		// Reads Input for Auto/Manual
+		b = HAL_GPIO_ReadPin(GPIOB, B_INPUT_Pin);		// Reads Input for Auto/Manual
 
-		newTrigState = HAL_GPIO_ReadPin(GPIOA, TRIGGER_INPUT_Pin);		// Reads Input from the Trigger Pin
+		newTrigState = HAL_GPIO_ReadPin(GPIOB, TRIGGER_INPUT_Pin);		// Reads Input from the Trigger Pin
 
 		float_sensor = HAL_GPIO_ReadPin(GPIOB, FLT_SENSE_Pin);		//Reads Input from the Float Sensor
+
 
 
 		//sprintf(buff, "%d,%d,%d, %d \n\r",a,b,newTrigState,float_sensor);
@@ -516,57 +516,59 @@ void ModeSelect()
        // HAL_Delay(200);
 
 
-		if((a==0) && (b==1)){						// The switch is in Manual Mode. When switch symbol is - then we are in manual mode, when switch symbol is = then we are in auto-mode
+		 if((a==1) && (b==0)){						// The switch is in Auto Mode. ie the switch position is at =
 
-			if(newTrigState==0 && prevTrigBtnState==1){    //If the state has changed, increment the counter
+					  // newTrigState = HAL_GPIO_ReadPin(GPIOA, TRIGGER_INPUT_Pin);
 
-			    	if(MotorState == 0){        //If the current state of Motor is LOW, then the button went from off to on
+							if(newTrigState == 0){
 
-			    		HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);			//  Motor_On Blinky Status
-			    		HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
-			    		MotorState=1;
+							//	if (MotorState == 0 && ((Distance >= Threshold_min) || (Distance <= Threshold_min)  || float_sensor!=0)){					//Water is less than Threshold level, then turn ON the Motor
+								if (MotorState == 0 && float_sensor!=0){					//Water is less than Threshold level, then turn ON the Motor
+									HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
+									HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
+									MotorState = 1;
+								}
 
-				    	}else{
+							//} else if(MotorState == 1 && ((Distance <= Threshold_max) || float_sensor==0)){		//Water has reached the Threshold Level, turn OFF the Motor
+							  } else if(MotorState == 1 && float_sensor==0){		//Water has reached the Threshold Level, turn OFF the Motor
 
-				    	HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-				    	HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
-				    	MotorState=0;
-				    	}
-			    	HAL_Delay(10);
+								HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+							    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+							    HAL_GPIO_WritePin(GPIOB,ALARM_Pin,GPIO_PIN_SET);
+							    MotorState = 0;
+							  }	else if((MotorState == 0 && newTrigState == 1) || float_sensor==0){				//Water has reached the Threshold Level, turn OFF the Motor
+
+								HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+							    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+							   // HAL_GPIO_WritePin(GPIOB,ALARM_Pin,GPIO_PIN_RESET);
+							  }
+
+				   } else if((a==0) && (b==1)){						// The switch is in Manual Mode. When switch symbol is - then we are in manual mode, when switch symbol is = then we are in auto-mode
+
+					   if(newTrigState==0 && prevTrigBtnState==1){    //If the state has changed, increment the counter
+
+						   if(MotorState == 0){        //If the current state of Motor is LOW, then the button went from off to on
+
+							HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);			//  Motor_On Blinky Status
+							HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
+							MotorState=1;
+
+							}else{
+
+							HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+							HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+							MotorState=0;
+							}
+						   HAL_Delay(5);
 
 				    }
-			prevTrigBtnState = newTrigState;
+					   	   prevTrigBtnState = newTrigState;
 
-
-
-		   } else if((a==1) && (b==0)){						// The switch is in Auto Mode. ie the switch position is at =
-
-			   newTrigState = HAL_GPIO_ReadPin(GPIOA, TRIGGER_INPUT_Pin);
-
-					if(newTrigState == 0){
-
-					//	if (MotorState == 0 && ((Distance >= Threshold_min) || (Distance <= Threshold_min)  || float_sensor!=0)){					//Water is less than Threshold level, then turn ON the Motor
-						if (MotorState == 0 && float_sensor!=0){					//Water is less than Threshold level, then turn ON the Motor
-							HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_1);
-							HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_SET);
-							MotorState = 1;
-						}
-
-					//} else if(MotorState == 1 && ((Distance <= Threshold_max) || float_sensor==0)){		//Water has reached the Threshold Level, turn OFF the Motor
-					  } else if(MotorState == 1 && float_sensor==0){		//Water has reached the Threshold Level, turn OFF the Motor
-
-						HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-					    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
-					    MotorState =0;
-					  }	else if((MotorState == 0 && newTrigState == 1) || float_sensor==0){				//Water has reached the Threshold Level, turn OFF the Motor
-
-						HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-					    HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
-					  }
-
-		   } else  {						// The switch is in Off/Center Mode
-			   	   	    HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
-						HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+				   }else {// The switch is in Off/Center Mode
+					   MotorState =0;
+					   HAL_TIM_PWM_Stop(&htim3, TIM_CHANNEL_1);
+					   HAL_GPIO_WritePin(GPIOB,MTR_RELAY_Pin,GPIO_PIN_RESET);
+					   HAL_GPIO_WritePin(GPIOB,ALARM_Pin,GPIO_PIN_RESET);
 		           }
 
 }
@@ -577,7 +579,7 @@ void HAL_TIM_PeriodElapsedCallback (TIM_HandleTypeDef * htim)
 
   if(htim == &htim17){
 
-     AutonomousLowPowerRangingTest();				//This function or API triggers after every 30s. Update Event handler.
+    // AutonomousLowPowerRangingTest();				//This function or API triggers after every 30s. Update Event handler.
 
   }
 
